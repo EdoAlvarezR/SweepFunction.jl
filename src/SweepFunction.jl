@@ -110,6 +110,33 @@ end
   `runsweep(self::Sweep)`
 
 Runs the sweep evaluation of the function.
+
+```jldoctest
+julia> function fun(cons1, cons2; arg1=1.0, arg2=1.0, arg3=1.0)
+           return arg1*arg2*arg3 + cons1 + cons2
+       end;
+
+julia> arg_sweep1 = ArgSweep{Int64}(:arg1, [1, 2, 3]);
+
+julia> arg_sweep2 = ArgSweep{Float64}(:arg2, [4.0, 5.0]);
+
+julia> arg_sweeps = [arg_sweep1, arg_sweep2];
+
+julia> cons_args = [10, 20];
+
+julia> sweep = Sweep(fun, arg_sweeps, cons_args);
+
+julia> res = runsweep(sweep);
+
+julia> printsweep(res)
+
+"f(10, 20; arg1=1, arg2=4.0) = 34.0\n
+f(10, 20; arg1=2, arg2=4.0) = 38.0\n
+f(10, 20; arg1=3, arg2=4.0) = 42.0\n
+f(10, 20; arg1=1, arg2=5.0) = 35.0\n
+f(10, 20; arg1=2, arg2=5.0) = 40.0\n
+f(10, 20; arg1=3, arg2=5.0) = 45.0\n"
+```
 """
 function runsweep(self::Sweep; _out=[])
 
