@@ -10,8 +10,8 @@
 module SweepFunction
 
 # ------------ EXPOSED FUNCTIONS------------------------------------------------
-export ArgSweep
-export Sweep, runsweep, printsweep
+export ArgSweep, get_nvals
+export Sweep, runsweep, printsweep, get_nevals
 
 
 # ------------ GENERIC MODULES -------------------------------------------------
@@ -160,6 +160,10 @@ function runsweep(self::Sweep; _out=[])
     # Sweeps last argument
     argsweep = self.argsweep[end]
 
+    if get_nvals(argsweep)==0
+      error("LOGIC ERROR: Received an argument sweep with 0 values! $argsweep")
+    end
+
     for i in 1:get_nvals(argsweep) # Iterates over argument values
 
       # Get the optional argument pointer and its value
@@ -224,6 +228,17 @@ function printsweep(runsweep_output; verbose=true, lvl=0, newln=false)
   end
 
   return out
+end
+
+"""
+  `get_nevals(self::Sweep)`
+
+Returns the number of function evaluations this sweep will take.
+"""
+function get_nevals(self::Sweep)
+  return prod( [ i for i in
+                [get_nvals(argsweep) for argsweep in self.argsweep
+                ] if i!=0])
 end
 ##### END OF SWEEP #############################################################
 
