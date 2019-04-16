@@ -138,7 +138,7 @@ f(10, 20; arg1=2, arg2=5.0) = 40.0\n
 f(10, 20; arg1=3, arg2=5.0) = 45.0\n"
 ```
 """
-function runsweep(self::Sweep; _out=[])
+function runsweep(self::Sweep; threaded_ites=0, _out=[])
 
   # Base case: no variables left to sweep
   if size(self.argsweep, 1)==0
@@ -164,20 +164,41 @@ function runsweep(self::Sweep; _out=[])
       error("LOGIC ERROR: Received an argument sweep with 0 values! $argsweep")
     end
 
-    for i in 1:get_nvals(argsweep) # Iterates over argument values
+    # Parallelized runs
+    if threaded_ites >= 1
+        Threads.@threads for i in 1:get_nvals(argsweep) # Iterates over argument values
 
-      # Get the optional argument pointer and its value
-      this_optarg = get_optarg(argsweep, i)
+          # Get the optional argument pointer and its value
+          this_optarg = get_optarg(argsweep, i)
 
-      # Creates a new sweep with this argument being constant
-      sweep = Sweep(self.fun,
-                      self.argsweep[1:end-1],
-                      self.cons_args,
-                      vcat(this_optarg, self.cons_optargs)
-                    )
+          # Creates a new sweep with this argument being constant
+          sweep = Sweep(self.fun,
+                          self.argsweep[1:end-1],
+                          self.cons_args,
+                          vcat(this_optarg, self.cons_optargs)
+                        )
 
-      # Recursive call
-      runsweep(sweep; _out=_out)
+          # Recursive call
+          runsweep(sweep; threaded_ites=threaded_ites-1, _out=_out)
+        end
+
+    # Serial runs
+    else
+        for i in 1:get_nvals(argsweep) # Iterates over argument values
+
+          # Get the optional argument pointer and its value
+          this_optarg = get_optarg(argsweep, i)
+
+          # Creates a new sweep with this argument being constant
+          sweep = Sweep(self.fun,
+                          self.argsweep[1:end-1],
+                          self.cons_args,
+                          vcat(this_optarg, self.cons_optargs)
+                        )
+
+          # Recursive call
+          runsweep(sweep; threaded_ites=threaded_ites-1, _out=_out)
+        end
     end
   end
 
